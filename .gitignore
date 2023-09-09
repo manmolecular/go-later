@@ -1,4 +1,5 @@
 # Custom ignore set
+todo
 .idea/
 later.db
 

@@ -1,6 +1,6 @@
 default: build
 
-build:
+build: vendor fmt lint
 	rm -rf later
 	go build -mod vendor -o later ./cmd/later/.
 

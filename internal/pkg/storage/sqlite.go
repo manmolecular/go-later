@@ -1,34 +1,34 @@
 package storage
 
 import (
-	"database/sql"
 	"fmt"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	"os"
-
-	_ "github.com/mattn/go-sqlite3"
 )
-
-const driverName = "sqlite3"
 
 // LocalStorage defines local storage for records
 type LocalStorage struct {
-	db       *sql.DB
+	db       *gorm.DB
 	filename string
 }
+
+// Validate that structure satisfies the interface
+var _ Storage = (*LocalStorage)(nil)
 
 // NewLocalStorage creates a new local storage object
 func NewLocalStorage(filename string) (*LocalStorage, error) {
 	if err := createDb(filename); err != nil {
-		return nil, fmt.Errorf("can not prepare database: %s\n", err)
+		return nil, fmt.Errorf("can not prepare database: %s", err)
 	}
 
-	db, err := sql.Open(driverName, filename)
+	db, err := gorm.Open(sqlite.Open(filename), &gorm.Config{})
 	if err != nil {
-		return nil, fmt.Errorf("database connection with file '%s' can not be opened, error: %s\n", filename, err)
+		return nil, fmt.Errorf("database connection with file '%s' can not be opened, error: %s", filename, err)
 	}
 
 	if err = createTable(db); err != nil {
-		return nil, fmt.Errorf("table can not be created, error: %s\n", err)
+		return nil, fmt.Errorf("table can not be created, error: %s", err)
 	}
 
 	return &LocalStorage{
@@ -39,76 +39,38 @@ func NewLocalStorage(filename string) (*LocalStorage, error) {
 
 // CreateRecord creates a record in the storage
 func (s *LocalStorage) CreateRecord(content string) error {
-	query := `INSERT INTO record(content) VALUES (?)`
-
-	stmt, err := s.db.Prepare(query)
-	if err != nil {
-		return fmt.Errorf("can not prepare add record statement, error: %s", err)
-	}
-
-	if _, err = stmt.Exec(content); err != nil {
-		return fmt.Errorf("can not execute prepared add record statement, error: %s", err)
+	if err := s.db.Create(&Record{Content: content}).Error; err != nil {
+		return fmt.Errorf("can not create record, error: %s", err)
 	}
 
 	return nil
 }
 
 // GetRecordByID returns record content by its ID
-func (s *LocalStorage) GetRecordByID(id int) (string, error) {
-	var content string
+func (s *LocalStorage) GetRecordByID(id uint) (string, error) {
+	var record Record
 
-	query := "SELECT content FROM record WHERE id = ?"
-
-	stmt, err := s.db.Prepare(query)
-	if err != nil {
-		return content, fmt.Errorf("can not prepare show record statement, error: %s", err)
+	if err := s.db.First(&record, id).Error; err != nil {
+		return record.Content, fmt.Errorf("can not get record, error: %s", err)
 	}
 
-	if err = stmt.QueryRow(id).Scan(&content); err != nil {
-		return content, fmt.Errorf("can not get content for the record, error: %s", err)
-	}
-
-	return content, nil
+	return record.Content, nil
 }
 
 // GetAllRecords returns all records
 func (s *LocalStorage) GetAllRecords() ([]Record, error) {
 	var records []Record
-
-	rows, err := s.db.Query("SELECT * FROM record ORDER BY id DESC")
-	if err != nil {
-		return records, fmt.Errorf("can not get records, error: %s", err)
-	}
-
-	defer func() {
-		if err = rows.Close(); err != nil {
-			fmt.Printf("can not close rows for further enumeration")
-		}
-	}()
-
-	for rows.Next() {
-		rowRecord := Record{}
-		if err = rows.Scan(&rowRecord.ID, &rowRecord.Content); err != nil {
-			fmt.Printf("can not get content for the record, error: %s\n", err)
-		}
-
-		records = append(records, rowRecord)
+	if err := s.db.Order("id DESC").Find(&records).Error; err != nil {
+		return records, fmt.Errorf("can not get list of records, error: %s", err)
 	}
 
 	return records, nil
 }
 
 // DeleteRecordByID deletes a record from the storage by its ID
-func (s *LocalStorage) DeleteRecordByID(id int) error {
-	query := `DELETE FROM record WHERE id = ?`
-
-	stmt, err := s.db.Prepare(query)
-	if err != nil {
-		return fmt.Errorf("can not prepare delete record statement, error: %s", err)
-	}
-
-	if _, err = stmt.Exec(id); err != nil {
-		return fmt.Errorf("can not execute prepared delete record statement, error: %s", err)
+func (s *LocalStorage) DeleteRecordByID(id uint) error {
+	if err := s.db.Delete(&Record{}, id).Error; err != nil {
+		return fmt.Errorf("can not delete record, error: %s", err)
 	}
 
 	return nil
@@ -116,9 +78,14 @@ func (s *LocalStorage) DeleteRecordByID(id int) error {
 
 // DeleteLastRecord deletes the latest record from the storage
 func (s *LocalStorage) DeleteLastRecord() error {
-	query := `DELETE FROM record WHERE id = (SELECT id FROM record ORDER BY id DESC LIMIT 1)`
+	query := `DELETE FROM records WHERE id = (SELECT id FROM records ORDER BY id DESC LIMIT 1)`
 
-	if _, err := s.db.Exec(query); err != nil {
+	db, err := s.db.DB()
+	if err != nil {
+		fmt.Printf("can not get database object, error: %s\n", err)
+	}
+
+	if _, err := db.Exec(query); err != nil {
 		return fmt.Errorf("can not execute delete last record statement, error: %s", err)
 	}
 
@@ -127,8 +94,13 @@ func (s *LocalStorage) DeleteLastRecord() error {
 
 // Close closes the storage
 func (s *LocalStorage) Close() {
-	if err := s.db.Close(); err != nil {
-		fmt.Printf("database connection with file '%s' can not be closed, error: %s\n", s.filename, err)
+	db, err := s.db.DB()
+	if err != nil {
+		fmt.Printf("can not get database object, error: %s\n", err)
+	}
+
+	if err := db.Close(); err != nil {
+		fmt.Printf("database connection can not be closed, error: %s\n", err)
 	}
 }
 
@@ -150,22 +122,10 @@ func createDb(filename string) error {
 	return nil
 }
 
-// createTable creates table for record entities (if not exists yet)
-func createTable(db *sql.DB) error {
-	query := `
-		CREATE TABLE IF NOT EXISTS record (
-		    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-		    "content" TEXT
-		);
-	`
-
-	stmt, err := db.Prepare(query)
-	if err != nil {
-		return fmt.Errorf("can not prepare create table statement, error: %s", err)
-	}
-
-	if _, err = stmt.Exec(); err != nil {
-		return fmt.Errorf("can not execute prepared create table statement, error: %s", err)
+// createTable creates table for record entities
+func createTable(db *gorm.DB) error {
+	if err := db.AutoMigrate(&Record{}); err != nil {
+		return fmt.Errorf("can not migrate the schema, error: %s", err)
 	}
 
 	return nil
