@@ -16,5 +16,6 @@ type Storage interface {
 	GetAllRecords() ([]Record, error)
 	DeleteRecordByID(id uint) error
 	DeleteLastRecord() error
-	Close()
+	Close() error
+	CleanUp() error
 }

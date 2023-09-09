@@ -93,21 +93,36 @@ func (s *LocalStorage) DeleteLastRecord() error {
 }
 
 // Close closes the storage
-func (s *LocalStorage) Close() {
+func (s *LocalStorage) Close() error {
 	db, err := s.db.DB()
 	if err != nil {
-		fmt.Printf("can not get database object, error: %s\n", err)
+		return fmt.Errorf("can not get database object, error: %s\n", err)
 	}
 
 	if err := db.Close(); err != nil {
-		fmt.Printf("database connection can not be closed, error: %s\n", err)
+		return fmt.Errorf("database connection can not be closed, error: %s\n", err)
 	}
+
+	return nil
+}
+
+// CleanUp cleans up database
+func (s *LocalStorage) CleanUp() error {
+	if _, err := os.Stat(s.filename); err != nil {
+		return fmt.Errorf("database file '%s' does not exist, error: %s", s.filename, err)
+	}
+
+	if err := os.Remove(s.filename); err != nil {
+		return fmt.Errorf("database file '%s' can not be deleted, error: %s", s.filename, err)
+	}
+
+	return nil
 }
 
 // createDb creates database file for usage (if not exists yet)
 func createDb(filename string) error {
 	if _, err := os.Stat(filename); err == nil {
-		return nil
+		return nil // file already exists
 	}
 
 	file, err := os.Create(filename)
