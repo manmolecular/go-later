@@ -11,6 +11,7 @@ import (
 
 // LocalStorage defines local storage for records
 type LocalStorage struct {
+	// Note: GORM or any other ORM is not required here, for sure, I just wanted to try it
 	db     *gorm.DB
 	dbPath string
 }
@@ -25,13 +26,13 @@ func NewLocalStorage(filename string) (*LocalStorage, error) {
 		return nil, fmt.Errorf("can not locate home directory, error: %s", err)
 	}
 
-	storageDir := path.Join(homeDir, StorageDir)
+	storageDir := path.Join(homeDir, BaseDir)
 	if err = os.MkdirAll(storageDir, 0700); err != nil {
 		return nil, fmt.Errorf("can not create storage directory, error: %s", err)
 	}
 
 	dbPath := path.Join(storageDir, filename)
-	if err := createDb(dbPath); err != nil {
+	if err = createDb(dbPath); err != nil {
 		return nil, fmt.Errorf("can not prepare database, error: %s", err)
 	}
 

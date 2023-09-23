@@ -2,7 +2,7 @@ package storage
 
 import "time"
 
-const StorageDir = ".later"
+const BaseDir = ".later"
 
 // Record defines record format representation
 type Record struct {

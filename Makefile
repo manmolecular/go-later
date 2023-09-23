@@ -1,7 +1,8 @@
 default: build
 
-build: vendor fmt lint
-	rm -rf later
+pipeline: vendor fmt lint build
+
+build: del_binary
 	go build -mod vendor -o later ./cmd/later/.
 
 tidy:
@@ -16,5 +17,8 @@ fmt:
 
 lint: fmt
 	golangci-lint run
+
+del_binary:
+	rm -rf later
 
 .PHONY: default $(MAKECMDGOALS)
