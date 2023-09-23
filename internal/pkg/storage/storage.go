@@ -2,6 +2,8 @@ package storage
 
 import "time"
 
+const StorageDir = ".later"
+
 // Record defines record format representation
 type Record struct {
 	ID        uint `gorm:"primarykey"`

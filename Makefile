@@ -14,7 +14,7 @@ vendor: tidy
 fmt:
 	go fmt ./...
 
-lint:
+lint: fmt
 	golangci-lint run
 
 .PHONY: default $(MAKECMDGOALS)

@@ -5,12 +5,14 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
+	"path"
+	"path/filepath"
 )
 
 // LocalStorage defines local storage for records
 type LocalStorage struct {
-	db       *gorm.DB
-	filename string
+	db     *gorm.DB
+	dbPath string
 }
 
 // Validate that structure satisfies the interface
@@ -18,13 +20,24 @@ var _ Storage = (*LocalStorage)(nil)
 
 // NewLocalStorage creates a new local storage object
 func NewLocalStorage(filename string) (*LocalStorage, error) {
-	if err := createDb(filename); err != nil {
-		return nil, fmt.Errorf("can not prepare database: %s", err)
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("can not locate home directory, error: %s", err)
 	}
 
-	db, err := gorm.Open(sqlite.Open(filename), &gorm.Config{})
+	storageDir := path.Join(homeDir, StorageDir)
+	if err = os.MkdirAll(storageDir, 0700); err != nil {
+		return nil, fmt.Errorf("can not create storage directory, error: %s", err)
+	}
+
+	dbPath := path.Join(storageDir, filename)
+	if err := createDb(dbPath); err != nil {
+		return nil, fmt.Errorf("can not prepare database, error: %s", err)
+	}
+
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 	if err != nil {
-		return nil, fmt.Errorf("database connection with file '%s' can not be opened, error: %s", filename, err)
+		return nil, fmt.Errorf("database connection can not be established, error: %s", err)
 	}
 
 	if err = createTable(db); err != nil {
@@ -32,8 +45,8 @@ func NewLocalStorage(filename string) (*LocalStorage, error) {
 	}
 
 	return &LocalStorage{
-		db:       db,
-		filename: filename,
+		db:     db,
+		dbPath: dbPath,
 	}, nil
 }
 
@@ -108,30 +121,35 @@ func (s *LocalStorage) Close() error {
 
 // CleanUp cleans up database
 func (s *LocalStorage) CleanUp() error {
-	if _, err := os.Stat(s.filename); err != nil {
-		return fmt.Errorf("database file '%s' does not exist, error: %s", s.filename, err)
+	if _, err := os.Stat(s.dbPath); err != nil {
+		return fmt.Errorf("database file does not exist, error: %s", err)
 	}
 
-	if err := os.Remove(s.filename); err != nil {
-		return fmt.Errorf("database file '%s' can not be deleted, error: %s", s.filename, err)
+	if err := os.Remove(s.dbPath); err != nil {
+		return fmt.Errorf("database file can not be deleted, error: %s", err)
+	}
+
+	storageDir := filepath.Dir(s.dbPath)
+	if err := os.RemoveAll(storageDir); err != nil {
+		return fmt.Errorf("storage directory can not be deleted, error: %s", err)
 	}
 
 	return nil
 }
 
 // createDb creates database file for usage (if not exists yet)
-func createDb(filename string) error {
-	if _, err := os.Stat(filename); err == nil {
+func createDb(dbPath string) error {
+	if _, err := os.Stat(dbPath); err == nil {
 		return nil // file already exists
 	}
 
-	file, err := os.Create(filename)
+	file, err := os.Create(dbPath)
 	if err != nil {
-		return fmt.Errorf("database file '%s' can not be created, error: %s", filename, err)
+		return fmt.Errorf("database file can not be created, error: %s", err)
 	}
 
 	if err = file.Close(); err != nil {
-		return fmt.Errorf("database file '%s' can not be closed, error: %s", filename, err)
+		return fmt.Errorf("database file can not be closed, error: %s", err)
 	}
 
 	return nil
