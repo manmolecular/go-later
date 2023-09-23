@@ -9,6 +9,11 @@ import (
 	"path/filepath"
 )
 
+const (
+	dbDirDefault  = ".later"
+	dbFileDefault = "later.db"
+)
+
 // LocalStorage defines local storage for records
 type LocalStorage struct {
 	// Note: GORM or any other ORM is not required here, for sure, I just wanted to try it
@@ -19,21 +24,33 @@ type LocalStorage struct {
 // Validate that structure satisfies the interface
 var _ Storage = (*LocalStorage)(nil)
 
-// NewLocalStorage creates a new local storage object
-func NewLocalStorage(filename string) (*LocalStorage, error) {
-	homeDir, err := os.UserHomeDir()
+// NewCustomLocalStorage creates a new local storage with custom storage location
+func NewCustomLocalStorage(baseDir, dbDir, dbName string) (*LocalStorage, error) {
+	dbPath, err := createCustomStorage(baseDir, dbDir, dbName)
 	if err != nil {
-		return nil, fmt.Errorf("can not locate home directory, error: %s", err)
+		return nil, fmt.Errorf("can not create custom storage, error: %s", err)
 	}
 
-	storageDir := path.Join(homeDir, BaseDir)
-	if err = os.MkdirAll(storageDir, 0700); err != nil {
-		return nil, fmt.Errorf("can not create storage directory, error: %s", err)
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	if err != nil {
+		return nil, fmt.Errorf("database connection can not be established, error: %s", err)
 	}
 
-	dbPath := path.Join(storageDir, filename)
-	if err = createDb(dbPath); err != nil {
-		return nil, fmt.Errorf("can not prepare database, error: %s", err)
+	if err = createTable(db); err != nil {
+		return nil, fmt.Errorf("table can not be created, error: %s", err)
+	}
+
+	return &LocalStorage{
+		db:     db,
+		dbPath: dbPath,
+	}, nil
+}
+
+// NewLocalStorage creates a new local storage with default configuration in current user's home directory
+func NewLocalStorage() (*LocalStorage, error) {
+	dbPath, err := createStorage()
+	if err != nil {
+		return nil, fmt.Errorf("can not create default storage, error: %s", err)
 	}
 
 	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
@@ -136,6 +153,36 @@ func (s *LocalStorage) CleanUp() error {
 	}
 
 	return nil
+}
+
+// createCustomStorage creates a custom path storage
+func createCustomStorage(baseDir, dbDir, dbName string) (string, error) {
+	dbDirPath := path.Join(baseDir, dbDir)
+	if err := os.MkdirAll(dbDirPath, 0700); err != nil {
+		return "", fmt.Errorf("can not create storage directory, error: %s", err)
+	}
+
+	dbPath := path.Join(dbDirPath, dbName)
+	if err := createDb(dbPath); err != nil {
+		return "", fmt.Errorf("can not prepare database, error: %s", err)
+	}
+
+	return dbPath, nil
+}
+
+// createStorage creates a default storage in current user's home directory
+func createStorage() (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("can not locate home directory, error: %s", err)
+	}
+
+	dbPath, err := createCustomStorage(homeDir, dbDirDefault, dbFileDefault)
+	if err != nil {
+		return "", fmt.Errorf("can not create storage, error: %s", err)
+	}
+
+	return dbPath, nil
 }
 
 // createDb creates database file for usage (if not exists yet)

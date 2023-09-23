@@ -5,6 +5,9 @@ pipeline: vendor fmt lint build
 build: del_binary
 	go build -mod vendor -o later ./cmd/later/.
 
+test:
+	go test -v ./...
+
 tidy:
 	go mod tidy
 

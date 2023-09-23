@@ -11,8 +11,6 @@ import (
 	"github.com/manmolecular/go-later/internal/pkg/storage"
 )
 
-const dbName = "later.db"
-
 // Command implements command handler and router
 type Command struct {
 	storage storage.Storage
@@ -85,7 +83,7 @@ func (c *Command) handle(args []string) error {
 }
 
 func main() {
-	s, err := storage.NewLocalStorage(dbName)
+	s, err := storage.NewLocalStorage()
 	if err != nil {
 		fmt.Printf("storage can not be accessed or created, error: %s\n", err)
 		os.Exit(1)
