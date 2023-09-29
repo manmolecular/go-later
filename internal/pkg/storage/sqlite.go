@@ -88,14 +88,24 @@ func (s *LocalStorage) GetRecordByID(id uint) (string, error) {
 	return record.Content, nil
 }
 
-// GetAllRecords returns all records
-func (s *LocalStorage) GetAllRecords() ([]Record, error) {
+// GetRecords returns all records
+func (s *LocalStorage) GetRecords() ([]Record, error) {
 	var records []Record
 	if err := s.db.Order("id DESC").Find(&records).Error; err != nil {
 		return records, fmt.Errorf("can not get list of records, error: %s", err)
 	}
 
 	return records, nil
+}
+
+// CountRecords counts all records
+func (s *LocalStorage) CountRecords() (uint, error) {
+	var count int64
+	if err := s.db.Table("records").Count(&count).Error; err != nil {
+		return uint(count), fmt.Errorf("can not count records, error: %s", err)
+	}
+
+	return uint(count), nil
 }
 
 // DeleteRecordByID deletes a record from the storage by its ID

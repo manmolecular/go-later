@@ -36,8 +36,8 @@ func TestNewCustomLocalStorage(t *testing.T) {
 	}
 }
 
-// TestCreateRecord checks that record can be created and retrieved
-func TestCreateRecord(t *testing.T) {
+// TestCreateRecord checks that record can be created, retrieved and counter; generic smoke test
+func TestCreateRetrieveCountRecordSmoke(t *testing.T) {
 	s, err := createTestStorage()
 	if err != nil {
 		t.Errorf("test storage can not be created, unexpected error: %s", err)
@@ -55,7 +55,7 @@ func TestCreateRecord(t *testing.T) {
 		t.Errorf("test record can not be created, unexpected error: %s", err)
 	}
 
-	records, err := s.GetAllRecords()
+	records, err := s.GetRecords()
 	if err != nil {
 		t.Errorf("records can not be retrieved, unexpected error: %s", err)
 	}
@@ -66,5 +66,14 @@ func TestCreateRecord(t *testing.T) {
 
 	if records[0].Content != testRecordContent {
 		t.Errorf("expected test record content: %s, got: %s", testRecordContent, records[0].Content)
+	}
+
+	count, err := s.CountRecords()
+	if err != nil {
+		t.Errorf("records can not be counted, unexpected error: %s", err)
+	}
+
+	if count != 1 {
+		t.Errorf("exactly 1 test record expected, got: %d", count)
 	}
 }

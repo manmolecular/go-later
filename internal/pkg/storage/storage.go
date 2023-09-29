@@ -13,7 +13,8 @@ type Record struct {
 type Storage interface {
 	CreateRecord(content string) error
 	GetRecordByID(id uint) (string, error)
-	GetAllRecords() ([]Record, error)
+	GetRecords() ([]Record, error)
+	CountRecords() (uint, error)
 	DeleteRecordByID(id uint) error
 	DeleteLastRecord() error
 	Close() error

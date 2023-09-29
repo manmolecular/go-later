@@ -53,13 +53,19 @@ func (c *Command) handle(args []string) error {
 		}
 		fmt.Println(content)
 	case "list":
-		records, err := c.storage.GetAllRecords()
+		records, err := c.storage.GetRecords()
 		if err != nil {
 			return fmt.Errorf("records can not be displayed, error: %s", err)
 		}
 		for _, rowRecord := range records {
 			fmt.Printf("%d. %s (created at: %s)\n", rowRecord.ID, rowRecord.Content, rowRecord.CreatedAt.Format("2006-01-02 15:04:05"))
 		}
+	case "count":
+		count, err := c.storage.CountRecords()
+		if err != nil {
+			return fmt.Errorf("records can not be counted, error: %s", err)
+		}
+		fmt.Println(count)
 	case "delete": // by ID
 		if len(args) < 2 {
 			return errors.New("ID is not provided")
@@ -99,7 +105,7 @@ func main() {
 	args := flag.Args()
 
 	if len(args) == 0 {
-		fmt.Printf("later: \n - push <text>\n - pop\n - show <id>\n - list\n - delete <id>\n - clean\n")
+		fmt.Printf("later: \n - push <text>\n - pop\n - show <id>\n - list\n - count\n - delete <id>\n - clean\n")
 		os.Exit(1)
 	}
 
