@@ -36,7 +36,7 @@ func TestNewCustomLocalStorage(t *testing.T) {
 	}
 }
 
-// TestCreateRecord checks that record can be created, retrieved and counter; generic smoke test
+// TestCreateRetrieveCountRecordSmoke checks that record can be created, retrieved and counter; generic smoke test
 func TestCreateRetrieveCountRecordSmoke(t *testing.T) {
 	s, err := createTestStorage()
 	if err != nil {
