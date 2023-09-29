@@ -1,5 +1,5 @@
 # go-later
-The simplest possible "Do it later" that I can come up with to use every day in a terminal for my small tasks.
+Simple terminal "To Do" app that I came up with to simplify my small temporary work tasks.
 
 ## Requirements
 - Go (tested on 1.21)
@@ -27,7 +27,7 @@ alias tdd="later delete"
 alias tdc="later clean"
 echo "Tasks to do: $(later count) (use \"tdl\" to see)"
 ```
-3. Restart the shell/terminal, verify that it works:
+3. Restart the shell/terminal/iterm/etc., verify that it works:
 ```shell
 Last login: Sat Sep 30 01:47:51 on ttys001
 Tasks to do: 0 (use "tdl" to see)
