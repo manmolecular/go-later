@@ -1,6 +1,6 @@
 default: build
 
-pipeline: vendor fmt lint build
+pipeline: vendor fmt lint test build
 
 build: del_binary
 	go build -mod vendor -o later ./cmd/later/.

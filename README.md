@@ -11,8 +11,8 @@ make
 ```
 2. Add to your shell configuration (for me it is `.zshrc`). I use a set of additional aliases for simplification:
 ```shell
-# later (todo task list) binary and its aliases
-export PATH="$HOME/Petprojects/go-later:$PATH"
+# later (to do task list) binary and its aliases
+export PATH="$HOME/<YOUR_PATH>/go-later:$PATH"
 # 'tdh' is a short reminder of available aliases
 alias tdh="echo 'td (add), tdl (list), tdp (pop), tdd (delete), tdc (clean)'"
 # 'td' is a default alias to add tasks to the list
@@ -25,15 +25,15 @@ alias tdp="later pop"
 alias tdd="later delete"
 # 'tdc' cleans up the tasks storage (homedir/.later)
 alias tdc="later clean"
+echo "Tasks to do: $(later count) (use \"tdl\" to see)"
 ```
 3. Restart the shell/terminal, verify that it works:
 ```shell
+Last login: Sat Sep 30 01:47:51 on ttys001
+Tasks to do: 0 (use "tdl" to see)
+➜  ~ td do this later
+➜  ~ tdl
+1. do this later (created at: 2023-09-30 01:49:12)
 ➜  ~ tdh
 td (add), tdl (list), tdp (pop), tdd (delete), tdc (clean)
-➜  ~ td something to do later
-➜  ~ tdl
-1. something to do later (created at: 2023-09-23 10:16:41)
-➜  ~ tdp
-➜  ~ tdl
-➜  ~
 ```
