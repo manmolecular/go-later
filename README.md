@@ -11,7 +11,7 @@ Simple terminal "To Do" application that I came up with to simplify my small tem
 make  # which is equal to: "go build -mod vendor -o later ./cmd/later/."
 ```
 3. Make sure that the build process was successful and the binary file `later` exists in the root directory of the repository
-4. Validate that the application works - run the `later` binary without any arguments to see available commands:
+4. Validate that the application works - run the `later` binary to see available commands:
 ```shell
 ./later
 ```
