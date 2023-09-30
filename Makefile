@@ -24,4 +24,6 @@ lint: fmt
 del_binary:
 	rm -rf later
 
+clean: del_binary
+
 .PHONY: default $(MAKECMDGOALS)
