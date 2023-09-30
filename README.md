@@ -15,7 +15,7 @@ make  # which is equal to: "go build -mod vendor -o later ./cmd/later/."
 ```shell
 ./later
 ```
-5. Integrate `later` with your shell of choice; add to your shell configuration file (for `zsh` it is the `~/.zshrc` file) the following lines. **Note**: please, adjust `<YOUR_PATH>` in the snippet below to your own path including the `later` binary. Feel free to modify commands as you wish:
+5. Integrate `later` with your shell of choice; append the following lines to the end of your shell configuration file (for `zsh` it is the `~/.zshrc` file). **Note**: please, adjust `<YOUR_PATH>` in the snippet below to your own path with the `later` binary (pay attention to the `! NOTE` markers). Feel free to modify commands as you wish:
 ```shell
 # later (to do task list) binary and its aliases
 # ! NOTE (1): please, make sure that `later` binary is built first
