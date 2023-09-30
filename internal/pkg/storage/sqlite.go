@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	dbDirDefault  = ".later"
-	dbFileDefault = "later.db"
+	defaultDbDir  = ".later"
+	defaultDbFile = "later.db"
 )
 
 // LocalStorage defines local storage for records
@@ -186,7 +186,7 @@ func createStorage() (string, error) {
 		return "", fmt.Errorf("can not locate home directory, error: %s", err)
 	}
 
-	dbPath, err := createCustomStorage(homeDir, dbDirDefault, dbFileDefault)
+	dbPath, err := createCustomStorage(homeDir, defaultDbDir, defaultDbFile)
 	if err != nil {
 		return "", fmt.Errorf("can not create storage, error: %s", err)
 	}

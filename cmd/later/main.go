@@ -11,6 +11,26 @@ import (
 	"github.com/manmolecular/go-later/internal/pkg/storage"
 )
 
+const (
+	cmdPush   = "push"
+	cmdPop    = "pop"
+	cmdShow   = "show"
+	cmdList   = "list"
+	cmdCount  = "count"
+	cmdDelete = "delete"
+	cmdClean  = "clean"
+)
+
+var cmdToDesc = map[string]string{
+	cmdPush:   "add new task",
+	cmdPop:    "delete the latest task",
+	cmdShow:   "show the exact task by its ID",
+	cmdList:   "list all tasks",
+	cmdCount:  "count tasks",
+	cmdDelete: "delete the exact task by its ID",
+	cmdClean:  "clean the database",
+}
+
 // Command implements command handler and router
 type Command struct {
 	storage storage.Storage
@@ -24,7 +44,7 @@ func NewCommand(s storage.Storage) *Command {
 // handle handles commands passed from the CLI
 func (c *Command) handle(args []string) error {
 	switch strings.ToLower(args[0]) {
-	case "push": // content
+	case cmdPush: // content
 		if len(args) < 2 {
 			return errors.New("content is not provided")
 		}
@@ -35,11 +55,11 @@ func (c *Command) handle(args []string) error {
 		if err := c.storage.CreateRecord(record); err != nil {
 			return fmt.Errorf("record can not be added to the database, error: %s", err)
 		}
-	case "pop":
+	case cmdPop:
 		if err := c.storage.DeleteLastRecord(); err != nil {
 			return fmt.Errorf("last record can not be deleted, error: %s", err)
 		}
-	case "show": // by ID
+	case cmdShow: // by ID
 		if len(args) < 2 {
 			return errors.New("ID is not provided")
 		}
@@ -52,7 +72,7 @@ func (c *Command) handle(args []string) error {
 			return fmt.Errorf("record can not be shown, error: %s", err)
 		}
 		fmt.Println(content)
-	case "list":
+	case cmdList:
 		records, err := c.storage.GetRecords()
 		if err != nil {
 			return fmt.Errorf("records can not be displayed, error: %s", err)
@@ -60,13 +80,13 @@ func (c *Command) handle(args []string) error {
 		for _, rowRecord := range records {
 			fmt.Printf("%d. %s (created at: %s)\n", rowRecord.ID, rowRecord.Content, rowRecord.CreatedAt.Format("2006-01-02 15:04:05"))
 		}
-	case "count":
+	case cmdCount:
 		count, err := c.storage.CountRecords()
 		if err != nil {
 			return fmt.Errorf("records can not be counted, error: %s", err)
 		}
 		fmt.Println(count)
-	case "delete": // by ID
+	case cmdDelete: // by ID
 		if len(args) < 2 {
 			return errors.New("ID is not provided")
 		}
@@ -77,7 +97,7 @@ func (c *Command) handle(args []string) error {
 		if err = c.storage.DeleteRecordByID(uint(id)); err != nil {
 			return fmt.Errorf("record can not be deleted, error: %s", err)
 		}
-	case "clean":
+	case cmdClean:
 		if err := c.storage.CleanUp(); err != nil {
 			return fmt.Errorf("storage can not be cleaned up, error: %s", err)
 		}
@@ -101,17 +121,25 @@ func main() {
 		}
 	}()
 
+	flag.Usage = func() {
+		for cmd, desc := range cmdToDesc {
+			fmt.Printf("- %s: %s\n", cmd, desc)
+		}
+	}
+
 	flag.Parse()
 	args := flag.Args()
 
 	if len(args) == 0 {
-		fmt.Printf("later: \n - push <text>\n - pop\n - show <id>\n - list\n - count\n - delete <id>\n - clean\n")
+		fmt.Println("no subcommands provided, list of supported subcommands:")
+		flag.Usage()
 		os.Exit(1)
 	}
 
 	command := NewCommand(s)
 	if err := command.handle(args); err != nil {
 		fmt.Printf("command error: %s\n", err)
+		flag.Usage()
 		os.Exit(1)
 	}
 }
