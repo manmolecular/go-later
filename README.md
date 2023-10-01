@@ -2,7 +2,7 @@
 Simple terminal "To Do" application that I came up with to simplify my small temporary work tasks.
 
 ## Requirements
-- Latest Go release (tested on 1.21, most probably won't work below 1.18)
+- Latest Go release (tested on 1.20, 1.21; most probably won't work below 1.18)
 
 ## Usage
 1. Clone the repo using `git clone`
@@ -10,7 +10,7 @@ Simple terminal "To Do" application that I came up with to simplify my small tem
 ```shell
 make  # which is equal to: "go build -mod vendor -o later ./cmd/later/."
 ```
-3. Make sure that the build process was successful and the binary file `later` exists in the root directory of the repository
+3. Make sure that the build process finished successfully and that the binary file `later` exists in the root directory of the repository
 4. Validate that the application works - run the `later` binary to see available commands:
 ```shell
 ./later
@@ -35,7 +35,7 @@ alias tdd="later delete"
 alias tdc="later clean"
 echo "Tasks to do: $(later count) (use \"tdl\" to see)"
 ```
-6. Restart the terminal, verify that integration with `later` works (macOS iTerm2 example below):
+6. Restart the terminal, and verify that integration with `later` works (macOS iTerm2 example below):
 ```shell
 Last login: Sat Sep 30 01:47:51 on ttys001
 Tasks to do: 0 (use "tdl" to see)
